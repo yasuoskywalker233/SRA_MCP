@@ -16,29 +16,32 @@
 ## 安装
 
 ```bash
-pip install -e .
+pip install .
 ```
 
 ## 配置
 
-在 MCP 目录下创建 `config.json`：
+在 MCP 目录下创建 `config.json`：配置StarRailAssistant的路径
 
 ```json
 {
-  "sra_path": "D:\\Software\\StarRailAssistant"
+  "sra_path": "D:\\Software\\StarRailAssistant" // StarRailAssistant的安装路径
 }
 ```
 
 ## MCP 客户端配置
 
-在 Claude Code 的 MCP 设置中添加：
+在 Claude Code 的settings.json中添加：
+
+路径：**SRA_MCP的绝对路径**，例如”D:\Work\SRA_MCP“，或者**相对于ClaudeCode工作目录的路径**，例如”../SRA_MCP“
 
 ```json
 {
-  "sra-mcp": {
-    "command": "python",
-    "args": ["-m", "sra_mcp"],
-    "cwd": "SRA_MCP"
+  "mcpServers": {
+    "SRA_MCP": {
+      "command": "sra-mcp",
+      "cwd": "路径"
+    }
   }
 }
 ```
