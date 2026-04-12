@@ -564,7 +564,7 @@ def update_trailblaze_power_task_list(
 
     try:
         with open(config_path, "w", encoding="utf-8") as f:
-            json.dump(config_data, f, indent=4, ensure_ascii=False)
+            json.dump(config_data, f, indent=4, ensure_ascii=True)
     except Exception as e:
         raise TrailblazePowerError(f"Failed to write config: {e}")
 

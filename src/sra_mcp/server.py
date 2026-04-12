@@ -1,4 +1,5 @@
 """SRA MCP Server - main entry point"""
+import argparse
 import sys
 from mcp.server.fastmcp import FastMCP
 
@@ -255,15 +256,20 @@ def sra_update_trailblaze_power_task_list(config_name: str, operation: dict) -> 
 
 def main():
     """Main entry point"""
-    # Load config on startup to catch errors early
-    try:
-        get_config()
-    except ConfigNotFoundError as e:
-        print(f"Warning: {e}", file=sys.stderr)
-    except ConfigReadError as e:
-        print(f"Warning: {e}", file=sys.stderr)
+    parser = argparse.ArgumentParser(description="SRA MCP Server")
+    parser.add_argument("-c", "--config", type=str, help="Path to config.json")
+    args = parser.parse_args()
 
-    # Run the MCP server
+    global _config
+    try:
+        _config = SRAConfig.load(args.config) if args.config else get_config()
+    except ConfigNotFoundError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except ConfigReadError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
     mcp.run()
 
 

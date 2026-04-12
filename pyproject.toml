@@ -21,5 +21,11 @@ dev = [
 [project.scripts]
 sra-mcp = "sra_mcp.server:main"
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+sra_mcp = ["*.json"]
+
 [tool.setuptools.packages.find]
 where = ["src"]

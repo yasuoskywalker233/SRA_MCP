@@ -67,8 +67,8 @@ class TestRunTask:
             with patch('subprocess.run') as mock_run:
                 mock_result = Mock()
                 mock_result.returncode = 0
-                mock_result.stdout = "output"
-                mock_result.stderr = ""
+                mock_result.stdout = b"output"
+                mock_result.stderr = b""
                 mock_run.return_value = mock_result
 
                 result = controller.run_task("config.yaml")
@@ -83,8 +83,8 @@ class TestRunTask:
             with patch('subprocess.run') as mock_run:
                 mock_result = Mock()
                 mock_result.returncode = 0
-                mock_result.stdout = "task output"
-                mock_result.stderr = ""
+                mock_result.stdout = b"task output"
+                mock_result.stderr = b""
                 mock_run.return_value = mock_result
 
                 result = controller.run_task("config.yaml", task_name="my_task")
@@ -100,14 +100,14 @@ class TestRunTask:
             with patch('subprocess.run') as mock_run:
                 mock_result = Mock()
                 mock_result.returncode = 1
-                mock_result.stdout = ""
-                mock_result.stderr = "error"
+                mock_result.stdout = b""
+                mock_result.stderr = b"error"
                 mock_run.return_value = mock_result
 
                 result = controller.run_task("config.yaml")
 
                 assert result.success is False
-                assert result.message == "Task failed"
+                assert result.message == "Task failed with exit code 1"
 
     def test_run_task_timeout(self, controller):
         """Test task timeout."""

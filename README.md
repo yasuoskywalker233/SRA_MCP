@@ -21,7 +21,7 @@ pip install .
 
 ## 配置
 
-在 MCP 目录下创建 `config.json`：配置StarRailAssistant的路径
+在 SRA_MCP/src/sra_mcp 目录下创建 `config.json`：配置StarRailAssistant的路径
 
 ```json
 {
@@ -37,10 +37,7 @@ pip install .
 {
   "mcpServers": {
     "SRA_MCP": {
-      "command": "sra-mcp",
-      "env":{
-        "SRA_MCP_CONFIG":"上一步配置的config.json的路径，例如D:\\work\\SRA\\SRA_MCP\\config.json"
-      }
+      "command": "sra-mcp"
     }
   }
 }
