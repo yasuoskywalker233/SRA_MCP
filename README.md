@@ -1,27 +1,25 @@
 # SRA MCP Server
 
-MCP server for controlling StarRailAssistant (SRA) via Model Context Protocol.
+通过模型上下文协议（MCP）控制星穹铁道助手（StarRailAssistant, SRA）的 MCP 服务器。
 
-## Features
+## 功能特性
 
-- Read SRA settings (raw JSON or human-readable format)
-- Update SRA settings using display names
-- Read SRA task configs (raw JSON or human-readable format)
-- Update SRA task configs using display names
-- List available task configs
-- Start SRA GUI
-- Run SRA tasks synchronously
-- Manage TrailblazePowerTaskList (add, update, remove tasks)
+- 读取/更新 SRA 设置（原始 JSON 或人类可读格式）
+- 读取/更新任务配置（原始 JSON 或人类可读格式）
+- 列出可用任务配置
+- 启动 SRA GUI 应用程序
+- 同步运行 SRA 任务
+- **新增** 管理 TrailblazePowerTaskList（添加、修改、删除清体力任务）
 
-## Installation
+## 安装
 
 ```bash
 pip install -e .
 ```
 
-## Configuration
+## 配置
 
-Create `config.json` in the MCP directory:
+在 MCP 目录下创建 `config.json`：
 
 ```json
 {
@@ -29,9 +27,9 @@ Create `config.json` in the MCP directory:
 }
 ```
 
-## MCP Client Configuration
+## MCP 客户端配置
 
-Add to your MCP settings:
+在 Claude Code 的 MCP 设置中添加：
 
 ```json
 {
@@ -43,205 +41,167 @@ Add to your MCP settings:
 }
 ```
 
-## Available Tools
+## 可用工具
 
-### Settings Tools
-| Tool | Description |
-|------|-------------|
-| `sra_get_settings` | Get raw settings JSON |
-| `sra_get_settings_readable` | Get settings with human-readable field names |
-| `sra_update_settings` | Update settings using display names |
+### 设置工具
+| 工具 | 描述 |
+|------|------|
+| `sra_get_settings` | 获取原始 settings.json |
+| `sra_get_settings_readable` | 获取可读的设置（中文显示名称） |
+| `sra_update_settings` | 使用显示名称更新设置（中文） |
 
-### Task Config Tools
-| Tool | Description |
-|------|-------------|
-| `sra_list_configs` | List all available task config names |
-| `sra_get_config` | Get raw task config JSON |
-| `sra_get_config_readable` | Get task config with human-readable field names |
-| `sra_update_config` | Update task config using display names |
+### 任务配置工具
+| 工具 | 描述 |
+|------|------|
+| `sra_list_configs` | 列出所有任务配置 |
+| `sra_get_config` | 获取原始任务配置 JSON |
+| `sra_get_config_readable` | 获取可读格式的任务配置 |
+| `sra_update_config` | 使用显示名称更新任务配置（中文） |
 
-### Task Execution Tools
-| Tool | Description |
-|------|-------------|
-| `sra_start` | Start SRA GUI |
-| `sra_run_task` | Run a task with optional timeout |
+### 任务执行工具
+| 工具 | 描述 |
+|------|------|
+| `sra_start` | 启动 SRA GUI 应用程序 |
+| `sra_run_task` | 同步运行任务（支持超时设置） |
 
-### TrailblazePowerTaskList Tools
-| Tool | Description |
-|------|-------------|
-| `sra_get_trailblaze_power_task_list` | Get TrailblazePowerTaskList details and available tasks |
-| `sra_update_trailblaze_power_task_list` | Add, update, or remove tasks in TrailblazePowerTaskList |
+### 清体力任务列表工具
+| 工具 | 描述 |
+|------|------|
+| `sra_get_trailblaze_power_task_list` | 获取清体力任务列表详情及可用关卡 |
+| `sra_update_trailblaze_power_task_list` | 添加、修改或删除清体力任务（原子操作） |
 
-## Usage Examples
+## 使用示例
 
-### Get Settings
-```
-sra_get_settings() -> {"language": 0, "appChannel": 0, ...}
-```
+### 设置操作
 
-### Get Readable Settings
-```
-sra_get_settings_readable() -> {
-  "raw": {...},
-  "readable": {
-    "语言": {"value": 0, "display": "简体中文", "options": ["简体中文", "English"]},
-    ...
-  }
-}
+```python
+# 获取原始设置
+sra_get_settings()
+
+# 获取可读设置（中文字段名）
+sra_get_settings_readable()
+
+# 更新设置
+sra_update_settings({"语言": "English", "StartStopHotkey": "f10"})
 ```
 
-### Update Settings
-```
-sra_update_settings({"语言": "English", "启用叠加层": "是"})
-```
+### 任务配置操作
 
-### List Task Configs
-```
-sra_list_configs() -> ["Default", "MyConfig"]
-```
+```python
+# 列出所有配置
+sra_list_configs()
 
-### Get Task Config
-```
-sra_get_config("Default") -> {"name": "Default", "enabledTasks": [true, false, ...], ...}
-```
+# 获取配置详情
+sra_get_config("Daily")
 
-### Get Readable Task Config
-```
-sra_get_config_readable("Default") -> {
-  "raw": {...},
-  "readable": {
-    "启用启动游戏": {"value": true, "display": "是", "options": ["否", "是"]},
-    "启用清体力": {"value": false, "display": "否", "options": ["否", "是"]},
-    "游戏通道": {"value": 0, "display": "国服", "options": ["国服", "B服"]},
-    "启用差分宇宙": {"value": true, "display": "是", "options": ["否", "是"]},
-    "启用货币战争": {"value": false, "display": "否", "options": ["否", "是"]},
-    "货币战争模式": {"value": 0, "display": "标准博弈", "options": ["标准博弈", "超频博弈", "刷开局"]},
-    "任务后退出游戏": {"value": false, "display": "否", "options": ["否", "是"]},
-    ...
-  }
-}
-```
-
-### Update Task Config
-```
-# Enable trailblaze power task and set replenish times
-sra_update_config("Default", {
-  "启用清体力": "是",
-  "补充体力次数": 3,
-  "启用差分宇宙": "是",
-  "差分宇宙运行次数": 5,
-  "货币战争模式": "标准博弈"
+# 更新任务配置（使用中文显示名称）
+sra_update_config("Daily", {
+    "启用清体力": "是",
+    "补充体力次数": 3,
+    "启用差分宇宙": "是"
 })
 ```
 
-### Start SRA
-```
-sra_start() -> {"success": true, "message": "SRA started successfully"}
+### 任务执行
+
+```python
+# 运行配置中所有已启用的任务
+sra_run_task("Daily")
+
+# 运行指定任务
+sra_run_task("Daily", "StartGameTask")
+
+# 自定义超时时间（秒）
+sra_run_task("Daily", timeout=3600)
 ```
 
-### Run Task
-```
-sra_run_task("Default")  # Run all enabled tasks in Default config
-sra_run_task("Default", "StartGameTask")  # Run specific task
-sra_run_task("Default", timeout=3600)  # 1 hour timeout
-```
+### 清体力任务列表操作
 
-### Get TrailblazePowerTaskList
-```
-sra_get_trailblaze_power_task_list("Daily") -> {
-  "config_name": "Daily",
-  "task_list": [
-    {"Name": "拟造花萼（赤）", "Id": "calyx_crimson", "Level": 17, ...},
-    {"Name": "历战余响", "Id": "echo_of_war", "Level": 1, ...}
-  ],
-  "available_tasks": [
-    {"id": "calyx_crimson", "name": "拟造花萼（赤）", "max_level": 17, "max_count": 24},
-    {"id": "echo_of_war", "name": "历战余响", "max_level": 8, "max_count": 3},
-    ...
-  ]
-}
-```
+```python
+# 获取任务列表和可用关卡
+sra_get_trailblaze_power_task_list("Daily")
+# 返回: {config_name, task_list, available_tasks: [{id, name, max_level, max_count, frontend_levels}]}
 
-### Add TrailblazePowerTask
-```
+# 添加任务（LevelName 根据 Level 自动填充）
 sra_update_trailblaze_power_task_list("Daily", {
-  "action": "add",
-  "Name": "历战余响",
-  "Id": "echo_of_war",
-  "Level": 3
+    "action": "add",
+    "Name": "历战余响",
+    "Id": "echo_of_war",
+    "Level": 3
+    # LevelName 自动填充为: "心兽的战场"
 })
-```
 
-### Update TrailblazePowerTask
-```
+# 修改任务等级（LevelName 自动更新）
 sra_update_trailblaze_power_task_list("Daily", {
-  "action": "update",
-  "index": 0,
-  "Level": 8
+    "action": "update",
+    "index": 0,
+    "Level": 8
+    # LevelName 自动更新为: "毁灭的开端"
 })
-```
 
-### Remove TrailblazePowerTask
-```
+# 删除任务
 sra_update_trailblaze_power_task_list("Daily", {
-  "action": "remove",
-  "index": 1
+    "action": "remove",
+    "index": 1
 })
 ```
 
-## TrailblazePowerTaskList Fields
+## 清体力任务列表
 
-### Task Item Structure
-| Field | Type | Description |
-|-------|------|-------------|
-| `Name` | string | Display name of the task |
-| `Id` | string | Task identifier (e.g., `calyx_crimson`, `echo_of_war`) |
-| `Level` | int | Level number (must be within valid range) |
-| `LevelName` | string | Level display name (auto-synced from Level, do not set manually) |
-| `Count` | int | Stamina cost per run (max varies by task) |
-| `RunTimes` | int | Number of times to execute |
-| `AutoDetect` | bool | Auto-detect level or manual |
+### 任务项结构
 
-### LevelName Auto-Sync
+| 字段 | 类型 | 描述 |
+|------|------|------|
+| `Name` | string | 显示名称（如 "历战余响"） |
+| `Id` | string | 任务标识符（如 `echo_of_war`） |
+| `Level` | int | 等级编号（从 1 开始，有效范围因任务而异） |
+| `LevelName` | string | 等级显示名称（**自动同步**，无需手动设置） |
+| `Count` | int | 每次消耗体力 |
+| `RunTimes` | int | 执行次数 |
+| `AutoDetect` | bool | 自动检测等级或手动指定 |
 
-When `Level` is modified, `LevelName` is automatically updated based on the frontend level data. You do not need to specify `LevelName` manually when adding or updating tasks.
+### LevelName 自动同步
 
-### Available Task Levels
+`LevelName` 根据 `Level` 自动从 SRA 前端数据计算得出。当你修改 `Level` 时，对应的 `LevelName` 会自动计算——无需手动设置。
 
-Use `sra_get_trailblaze_power_task_list` to get the full list of available levels for each task:
+### 有效任务 ID
 
-```json
-{
-  "available_tasks": [
-    {
-      "id": "calyx_crimson",
-      "name": "拟造花萼（赤）",
-      "max_level": 17,
-      "max_count": 24,
-      "frontend_levels": [
-        "---选择副本---",
-        "月狂獠牙（毁灭）",
-        "净世残刃（毀灭）",
-        ...
-        "《绒绒号》典藏版合集（欢愉）"
-      ]
-    }
-  ]
-}
-```
-
-### Valid Task IDs
-| ID | Name | Max Level | Max Count |
-|----|------|-----------|-----------|
+| ID | 名称 | 最大等级 | 最大次数 |
+|----|------|---------|---------|
 | `ornament_extraction` | 饰品提取 | 13 | 6 |
 | `calyx_golden` | 拟造花萼（金） | 15 | 24 |
 | `calyx_crimson` | 拟造花萼（赤） | 17 | 24 |
 | `stagnant_shadow` | 凝滞虚影 | 28 | 8 |
 | `caver_of_corrosion` | 侵蚀隧洞 | 15 | 6 |
-| `echo_of_war` | 历战余响 | 8 | 3 | |
+| `echo_of_war` | 历战余响 | 8 | 3 |
 
-## Limitations
+### 历战余响等级参考
 
-- Windows only (SRA itself is Windows-only)
-- Requires .NET 8.0 to run SRA GUI
-- Task execution is synchronous with configurable timeout (default 30 minutes)
+| Level | LevelName |
+|-------|-----------|
+| 1 | 铁骸的锈冢 |
+| 2 | 晨昏的回眸 |
+| 3 | 心兽的战场 |
+| 4 | 尘梦的赞礼 |
+| 5 | 蛀星的旧靥 |
+| 6 | 不死的神实 |
+| 7 | 寒潮的落幕 |
+| 8 | 毁灭的开端 |
+
+## 限制
+
+- **仅支持 Windows** - SRA 本身仅支持 Windows
+- **需要 .NET 8.0** - 用于运行 SRA GUI
+- **同步执行** - 任务执行会阻塞，超时时间可配置（默认 30 分钟）
+
+## 数据来源
+
+`TrailblazePowerTaskList` 工具使用 SRA 前端关卡数据：
+- `SRAFrontend/ViewModels/TaskPageViewModel.cs`（Tasks AvaloniaList）
+
+当 StarRailAssistant 更新关卡数据时，需要更新：
+- `src/sra_mcp/tools/trailblaze_power.py` 中的 `FRONTEND_LEVELS`
+
+## 许可证
+
+MIT License
