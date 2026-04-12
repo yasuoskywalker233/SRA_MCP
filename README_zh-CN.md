@@ -11,6 +11,7 @@
 - 列出可用任务配置
 - 启动 SRA GUI
 - 同步运行 SRA 任务
+- 管理 TrailblazePowerTaskList（添加、修改、删除清体力任务）
 
 ## 安装
 
@@ -64,6 +65,12 @@ pip install -e .
 |------|------|
 | `sra_start` | 启动 SRA GUI |
 | `sra_run_task` | 运行任务（支持超时设置） |
+
+### 清体力任务列表工具
+| 工具 | 描述 |
+|------|------|
+| `sra_get_trailblaze_power_task_list` | 获取清体力任务列表详情及可用任务 |
+| `sra_update_trailblaze_power_task_list` | 添加、修改或删除清体力任务 |
 
 ## 使用示例
 
@@ -134,6 +141,99 @@ sra_run_task("Default")  # 运行 Default 配置中所有已启用的任务
 sra_run_task("Default", "StartGameTask")  # 运行指定任务
 sra_run_task("Default", timeout=3600)  # 1 小时超时
 ```
+
+### 获取清体力任务列表
+```
+sra_get_trailblaze_power_task_list("Daily") -> {
+  "config_name": "Daily",
+  "task_list": [
+    {"Name": "拟造花萼（赤）", "Id": "calyx_crimson", "Level": 17, ...},
+    {"Name": "历战余响", "Id": "echo_of_war", "Level": 1, ...}
+  ],
+  "available_tasks": [
+    {"id": "calyx_crimson", "name": "拟造花萼（赤）", "max_level": 17, "max_count": 24},
+    {"id": "echo_of_war", "name": "历战余响", "max_level": 8, "max_count": 3},
+    ...
+  ]
+}
+```
+
+### 添加清体力任务
+```
+sra_update_trailblaze_power_task_list("Daily", {
+  "action": "add",
+  "Name": "历战余响",
+  "Id": "echo_of_war",
+  "Level": 3
+})
+```
+
+### 修改清体力任务
+```
+sra_update_trailblaze_power_task_list("Daily", {
+  "action": "update",
+  "index": 0,
+  "Level": 8
+})
+```
+
+### 删除清体力任务
+```
+sra_update_trailblaze_power_task_list("Daily", {
+  "action": "remove",
+  "index": 1
+})
+```
+
+## 清体力任务列表字段说明
+
+### 任务项结构
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `Name` | string | 任务显示名称 |
+| `Id` | string | 任务标识符（如 `calyx_crimson`、`echo_of_war`） |
+| `Level` | int | 等级编号（必须在有效范围内） |
+| `LevelName` | string | 等级显示名称（根据 Level 自动同步，无需手动设置） |
+| `Count` | int | 每次消耗体力（最大值因任务而异） |
+| `RunTimes` | int | 执行次数 |
+| `AutoDetect` | bool | 自动检测等级或手动指定 |
+
+### LevelName 自动同步
+
+当修改 `Level` 时，`LevelName` 会根据前端数据自动更新。添加或更新任务时无需手动指定 `LevelName`。
+
+### 可用关卡列表
+
+使用 `sra_get_trailblaze_power_task_list` 获取每个任务的完整关卡列表：
+
+```json
+{
+  "available_tasks": [
+    {
+      "id": "calyx_crimson",
+      "name": "拟造花萼（赤）",
+      "max_level": 17,
+      "max_count": 24,
+      "frontend_levels": [
+        "---选择副本---",
+        "月狂獠牙（毁灭）",
+        ...
+        "《绒绒号》典藏版合集（欢愉）"
+      ]
+    }
+  ]
+}
+```
+
+### 有效任务 ID
+| ID | 名称 | 最大等级 | 最大次数 |
+|----|------|---------|---------|
+| `ornament_extraction` | 饰品提取 | 13 | 6 |
+| `calyx_golden` | 拟造花萼（金） | 15 | 24 |
+| `calyx_crimson` | 拟造花萼（赤） | 17 | 24 |
+| `stagnant_shadow` | 凝滞虚影 | 28 | 8 |
+| `caver_of_corrosion` | 侵蚀隧洞 | 15 | 6 |
+| `echo_of_war` | 历战余响 | 8 | 3 | |
 
 ## 任务配置字段说明
 

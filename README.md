@@ -11,6 +11,7 @@ MCP server for controlling StarRailAssistant (SRA) via Model Context Protocol.
 - List available task configs
 - Start SRA GUI
 - Run SRA tasks synchronously
+- Manage TrailblazePowerTaskList (add, update, remove tasks)
 
 ## Installation
 
@@ -64,6 +65,12 @@ Add to your MCP settings:
 |------|-------------|
 | `sra_start` | Start SRA GUI |
 | `sra_run_task` | Run a task with optional timeout |
+
+### TrailblazePowerTaskList Tools
+| Tool | Description |
+|------|-------------|
+| `sra_get_trailblaze_power_task_list` | Get TrailblazePowerTaskList details and available tasks |
+| `sra_update_trailblaze_power_task_list` | Add, update, or remove tasks in TrailblazePowerTaskList |
 
 ## Usage Examples
 
@@ -138,6 +145,100 @@ sra_run_task("Default")  # Run all enabled tasks in Default config
 sra_run_task("Default", "StartGameTask")  # Run specific task
 sra_run_task("Default", timeout=3600)  # 1 hour timeout
 ```
+
+### Get TrailblazePowerTaskList
+```
+sra_get_trailblaze_power_task_list("Daily") -> {
+  "config_name": "Daily",
+  "task_list": [
+    {"Name": "拟造花萼（赤）", "Id": "calyx_crimson", "Level": 17, ...},
+    {"Name": "历战余响", "Id": "echo_of_war", "Level": 1, ...}
+  ],
+  "available_tasks": [
+    {"id": "calyx_crimson", "name": "拟造花萼（赤）", "max_level": 17, "max_count": 24},
+    {"id": "echo_of_war", "name": "历战余响", "max_level": 8, "max_count": 3},
+    ...
+  ]
+}
+```
+
+### Add TrailblazePowerTask
+```
+sra_update_trailblaze_power_task_list("Daily", {
+  "action": "add",
+  "Name": "历战余响",
+  "Id": "echo_of_war",
+  "Level": 3
+})
+```
+
+### Update TrailblazePowerTask
+```
+sra_update_trailblaze_power_task_list("Daily", {
+  "action": "update",
+  "index": 0,
+  "Level": 8
+})
+```
+
+### Remove TrailblazePowerTask
+```
+sra_update_trailblaze_power_task_list("Daily", {
+  "action": "remove",
+  "index": 1
+})
+```
+
+## TrailblazePowerTaskList Fields
+
+### Task Item Structure
+| Field | Type | Description |
+|-------|------|-------------|
+| `Name` | string | Display name of the task |
+| `Id` | string | Task identifier (e.g., `calyx_crimson`, `echo_of_war`) |
+| `Level` | int | Level number (must be within valid range) |
+| `LevelName` | string | Level display name (auto-synced from Level, do not set manually) |
+| `Count` | int | Stamina cost per run (max varies by task) |
+| `RunTimes` | int | Number of times to execute |
+| `AutoDetect` | bool | Auto-detect level or manual |
+
+### LevelName Auto-Sync
+
+When `Level` is modified, `LevelName` is automatically updated based on the frontend level data. You do not need to specify `LevelName` manually when adding or updating tasks.
+
+### Available Task Levels
+
+Use `sra_get_trailblaze_power_task_list` to get the full list of available levels for each task:
+
+```json
+{
+  "available_tasks": [
+    {
+      "id": "calyx_crimson",
+      "name": "拟造花萼（赤）",
+      "max_level": 17,
+      "max_count": 24,
+      "frontend_levels": [
+        "---选择副本---",
+        "月狂獠牙（毁灭）",
+        "净世残刃（毀灭）",
+        ...
+        "《绒绒号》典藏版合集（欢愉）"
+      ]
+    }
+  ]
+}
+```
+
+### Valid Task IDs
+| ID | Name | Max Level | Max Count |
+|----|------|-----------|-----------|
+| `ornament_extraction` | 饰品提取 | 13 | 6 |
+| `calyx_golden` | 拟造花萼（金） | 15 | 24 |
+| `calyx_crimson` | 拟造花萼（赤） | 17 | 24 |
+| `stagnant_shadow` | 凝滞虚影 | 28 | 8 |
+| `caver_of_corrosion` | 侵蚀隧洞 | 15 | 6 |
+| `echo_of_war` | 历战余响 | 8 | 3 | |
 
 ## Limitations
 

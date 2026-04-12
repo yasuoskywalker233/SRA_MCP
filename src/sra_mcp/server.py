@@ -30,6 +30,18 @@ from sra_mcp.sra_controller import (
     SRAProcessError,
     SRAConfigNotFoundError,
 )
+from sra_mcp.tools.trailblaze_power import (
+    get_trailblaze_power_task_list,
+    update_trailblaze_power_task_list,
+    TrailblazePowerError,
+    TrailblazePowerReadError,
+    InvalidOperationError,
+    IndexOutOfRangeError,
+    InvalidTaskIdError,
+    InvalidLevelError,
+    CountExceedsMaxError,
+    TypeValidationError,
+)
 
 
 # Create FastMCP server
@@ -187,6 +199,58 @@ def sra_run_task(
         raise Exception(f"Config not found: {e}")
     except (TaskToolError, SRAProcessError) as e:
         raise Exception(f"Task execution failed: {e}")
+
+
+@mcp.tool()
+def sra_get_trailblaze_power_task_list(config_name: str) -> dict:
+    """
+    获取清体力任务列表的详细信息。
+
+    Args:
+        config_name: 配置名称，如 "Daily"
+
+    Returns:
+        {
+            "config_name": "Daily",
+            "task_list": [...],
+            "available_tasks": [...]
+        }
+    """
+    try:
+        return get_trailblaze_power_task_list(config_name, get_config())
+    except TrailblazePowerReadError as e:
+        raise Exception(f"读取清体力任务配置失败: {e}")
+
+
+@mcp.tool()
+def sra_update_trailblaze_power_task_list(config_name: str, operation: dict) -> dict:
+    """
+    对清体力任务列表进行原子操作（添加、修改、删除关卡）。
+
+    Args:
+        config_name: 配置名称，如 "Daily"
+        operation: 操作对象，包含:
+            - action: "add" | "update" | "remove"
+            - index: 索引（update/remove 时必需）
+            - Name: 关卡名称（add 时必需）
+            - Id: 任务ID，如 "calyx_crimson"（add 时必需）
+            - Level: 等级（add/update 时支持）
+            - LevelName: 等级名称
+            - Count: 体力消耗次数
+            - RunTimes: 运行次数
+            - AutoDetect: 是否自动检测
+
+    Returns:
+        {
+            "success": True,
+            "message": "已添加关卡：xxx",
+            "data": {"trailblaze_power_task_list": [...]}
+        }
+    """
+    try:
+        return update_trailblaze_power_task_list(config_name, operation, get_config())
+    except TrailblazePowerError as e:
+        raise Exception(f"更新清体力任务配置失败: {e}")
 
 
 def main():
