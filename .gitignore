@@ -1,0 +1,9 @@
+# Bytecode cache
+__pycache__/
+*.pyc
+
+# pytest
+.pytest_cache/
+
+# Package build
+src/sra_mcp.egg-info/

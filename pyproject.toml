@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sra-mcp"
+version = "0.1.0"
+description = "MCP server for StarRailAssistant control"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.0.0",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.0",
+    "pytest-asyncio",
+]
+
+[project.scripts]
+sra-mcp = "sra_mcp.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
