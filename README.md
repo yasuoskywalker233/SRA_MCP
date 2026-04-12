@@ -33,14 +33,14 @@ pip install .
 
 在 Claude Code 的settings.json中添加：
 
-路径：**SRA_MCP的绝对路径**，例如”D:\Work\SRA_MCP“，或者**相对于ClaudeCode工作目录的路径**，例如”../SRA_MCP“
-
 ```json
 {
   "mcpServers": {
     "SRA_MCP": {
       "command": "sra-mcp",
-      "cwd": "路径"
+      "env":{
+        "SRA_MCP_CONFIG":"上一步配置的config.json的路径，例如D:\\work\\SRA\\SRA_MCP\\config.json"
+      }
     }
   }
 }
