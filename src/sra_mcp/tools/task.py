@@ -14,7 +14,7 @@ class TaskToolError(Exception):
     """Base exception for task operations"""
     pass
 
-
+# 启动SRA GUI
 def start_sra(config: Optional[SRAConfig] = None) -> dict:
     """Start SRA GUI application."""
     if config is None:

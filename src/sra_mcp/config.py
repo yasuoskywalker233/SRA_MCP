@@ -24,40 +24,20 @@ class SRAConfig:
         """
         Load configuration from config.json.
 
-        Search order:
-        1. Explicit config_path argument
-        2. SRA_MCP_CONFIG environment variable
-        3. {module directory}/config.json
-        4. {module directory}/../config.json
-        5. ./config.json (current working directory)
-        6. ../config.json (parent directory)
+        config.json must be in the same directory as this module (src/sra_mcp/).
         """
+        # 拼接路径
         if config_path is None:
-            config_path = os.environ.get("SRA_MCP_CONFIG")
-
-        if config_path is None:
-            # Search relative to this module file's directory
-            # Module is at src/sra_mcp/config.py, config.json is at SRA_MCP/config.json
             module_dir = Path(__file__).parent
-            project_root = module_dir.parent.parent
-            search_paths = [
-                project_root / "config.json",  # SRA_MCP/config.json
-                module_dir / "config.json",
-                module_dir.parent / "config.json",
-                Path.cwd() / "config.json",
-                Path.cwd().parent / "config.json",
-            ]
-            for p in search_paths:
-                if p.exists():
-                    config_path = p
-                    break
+            config_path = module_dir / "config.json"
+        else:
+            config_path = Path(config_path)
 
-        if config_path is None:
+        if not config_path.exists():
             raise ConfigNotFoundError(
-                "config.json not found. Create it in the MCP directory or set SRA_MCP_CONFIG environment variable."
+                "config.json not found. Create it in the MCP directory"
             )
-
-        config_path = Path(config_path)
+        # 打开文件
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -65,7 +45,6 @@ class SRAConfig:
             raise ConfigNotFoundError(f"Config file not found: {config_path}")
         except json.JSONDecodeError as e:
             raise ConfigReadError(f"Invalid JSON in config file: {e}")
-
         return cls(sra_path=data.get("sra_path", ""))
 
     def get_sra_exe_path(self) -> Path:

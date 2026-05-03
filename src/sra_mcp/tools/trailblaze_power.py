@@ -130,6 +130,7 @@ FRONTEND_LEVELS: dict[str, list[str]] = {
         "智识之钥（智识）",
         "天外乐章（同谐）",
         "群星乐章（同谐）",
+        "法吉娜之心（虚无）",
         "焚天之魔（虚无）",
         "沉沦黑曜（虚无）",
         "阿赖耶华（记忆）",
@@ -197,7 +198,22 @@ FRONTEND_LEVELS: dict[str, list[str]] = {
     ],
 }
 
+# Frontend Trailblaze_power Tasks Data
+# Data Source: SRAFrontend/ViewModels/TaskPageViewModel.cs
+#   -> Tasks AvaloniaList<TrailblazePowerTask>
+#   -> Each TrailblazePowerTask has Title and Id
+# key:Title
+# value:Id
+FRONTEND_TASKSNAME_TASKID : dict[str,str] = {
+    "饰品提取" : "ornament_extraction",
+    "拟造花萼（金）" : "calyx_golden",
+    "拟造花萼（赤）" : "calyx_crimson",
+    "凝滞虚影" : "stagnant_shadow",
+    "侵蚀隧洞" : "caver_of_corrosion",
+    "历战余响" : "echo_of_war"
+}
 
+# 通过task_id(模式名)和level下标获取副本名字
 def _get_level_name_from_frontend(task_id: str, level: int) -> str:
     """
     Get LevelName from Level and task_id using FRONTEND_LEVELS data.
@@ -224,7 +240,7 @@ def _get_level_name_from_frontend(task_id: str, level: int) -> str:
         return levels[level]
     return ""
 
-
+# 修改task_item的Id(模式)和level(副本下标)后，更新LevelName(关卡名)，避免破坏Json文件的数据正确性
 def _sync_level_name(task_item: dict) -> None:
     """
     Sync LevelName in a task item based on Level and Id.
@@ -246,7 +262,7 @@ def _sync_level_name(task_item: dict) -> None:
     if task_id and level:
         task_item["LevelName"] = _get_level_name_from_frontend(task_id, level)
 
-
+# 从SRA/tasks/config/trailblaze_power.toml中读取所有可选任务
 def load_trailblaze_power_config(sra_config=None) -> dict[str, dict]:
     """
     Load and parse trailblaze_power.toml.
@@ -256,8 +272,6 @@ def load_trailblaze_power_config(sra_config=None) -> dict[str, dict]:
         "calyx_crimson": {
             "name": "拟造花萼（赤）",
             "max_count": 24,
-            "max_level": 17,  # len(results)
-            "levels": [...] or "results": [...]
         },
         ...
     }
@@ -275,25 +289,32 @@ def load_trailblaze_power_config(sra_config=None) -> dict[str, dict]:
     subtasks = data.get("subtasks", {})
     for task_id, task_info in subtasks.items():
         max_count = task_info.get("max_count", 0)
-        levels = task_info.get("levels", [])
-        results = task_info.get("results", [])
-        max_level = max(len(levels), len(results)) if levels or results else 0
+        # levels = task_info.get("levels", [])
 
         result[task_id] = {
             "name": task_info.get("name", task_id),
             "max_count": max_count,
-            "max_level": max_level,
-            "levels": levels,
-            "results": results,
+            # "max_level": max_level,
+            # "levels": levels,
         }
-
     return result
 
+# 根据任务id获取任务名
+def get_task_name_by_task_id(task_id,sra_config=None) -> str:
+    sra_path = _get_sra_path(sra_config)
+    toml_path = sra_path / "tasks" / "config" / "trailblaze_power.toml"
+    try:
+        with open(toml_path, "rb") as f:
+            data = tomllib.load(f)
+    except FileNotFoundError:
+        raise TrailblazePowerReadError(f"trailblaze_power.toml not found at {toml_path}")
+    subtasks = data.get("subtasks", {})
+    return subtasks.get(task_id).get("name") 
 
 VALID_OPERATIONS = {"add", "update", "remove"}
-VALID_FIELDS = {"Name", "Id", "Level", "LevelName", "Count", "RunTimes", "AutoDetect"}
+VALID_FIELDS = {"Id", "Level", "Count", "RunTimes", "AutoDetect", "Name", "LevelName"}
 
-
+# 验证数据正确性
 def validate_task_fields(
     task_data: dict,
     task_config: dict[str, dict],
@@ -389,11 +410,9 @@ def validate_task_fields(
 
     return errors
 
-
-def get_trailblaze_power_task_list(
-    config_name: str,
-    sra_config=None
-) -> dict:
+# 获取目标配置的清体力任务列表 和 所有可用任务列表
+# 目标配置 和 所有可用 都走这个
+def get_trailblaze_power_task_list(config_name: str,sra_config=None) -> dict:
     """
     Get TrailblazePowerTaskList details for a config.
 
@@ -406,43 +425,45 @@ def get_trailblaze_power_task_list(
             "config_name": "Daily",
             "task_list": [...],  # Current task list
             "available_tasks": [
-                {"id": "calyx_crimson", "name": "拟造花萼（赤）", "max_level": 17, "max_count": 24},
+                {"id": "calyx_crimson", "name": "拟造花萼（赤）", "max_count": 24, "all_levels": {"levelName": "月狂獠牙（毁灭）", "index": 1}},
                 ...
             ]
         }
     """
     from sra_mcp.tools.task_config import get_task_config, TaskConfigNotFoundError, TaskConfigReadError
-
-    # Load trailblaze_power.toml for available tasks
+    # 加载sra中的所有可用任务
     task_config = load_trailblaze_power_config(sra_config)
-
-    # Load task config file
+    
+    # 加载目标配置的任务
     try:
         config_data = get_task_config(config_name, sra_config)
     except (TaskConfigNotFoundError, TaskConfigReadError) as e:
         raise TrailblazePowerReadError(f"Failed to read config '{config_name}': {e}")
-
-    # Get task list
     task_list = config_data.get("TrailblazePowerTaskList", [])
 
-    # Build available_tasks list
+    # 构建可用任务列表
     available_tasks = []
     for task_id, info in task_config.items():
+        levels = FRONTEND_LEVELS.get(task_id, []) #当前任务Id的所有可用副本
         available_tasks.append({
             "id": task_id,
             "name": info["name"],
-            "max_level": info["max_level"],
+            # "max_level": len(FRONTEND_LEVELS.get(task_id,[]))-1,
             "max_count": info["max_count"],
-            "frontend_levels": FRONTEND_LEVELS.get(task_id, []),
+            "all_levels": [
+                {"levelName":level, "index":i}
+                for i,level in enumerate(levels[1:],start=1) #0是选择副本，从1开始
+            ],
         })
 
+    # 返回结果
     return {
         "config_name": config_name,
         "task_list": task_list,
         "available_tasks": available_tasks,
     }
 
-
+# 更新目标配置的清体力列表任务项(添加/删除/更新)
 def update_trailblaze_power_task_list(
     config_name: str,
     operation: dict,
@@ -469,41 +490,40 @@ def update_trailblaze_power_task_list(
     from sra_mcp.tools.task_config import get_task_config, TaskConfigNotFoundError, TaskConfigReadError
     import json
 
-    # Load trailblaze_power.toml for validation
+    # 加载可选关卡
     task_config = load_trailblaze_power_config(sra_config)
 
-    # Validate action
+    # 验证操作合法性
     action = operation.get("action")
     if action not in VALID_OPERATIONS:
         raise InvalidOperationError(f"无效操作：{action}，有效值为 add/update/remove")
 
-    # Load current config
+    # 加载当前的清体力任务配置
     try:
         config_data = get_task_config(config_name, sra_config)
     except (TaskConfigNotFoundError, TaskConfigReadError) as e:
         raise TrailblazePowerReadError(f"Failed to read config '{config_name}': {e}")
-
     task_list = config_data.get("TrailblazePowerTaskList", [])
 
-    # Execute operation
-    if action == "add":
-        # Validate required fields for add
-        required_fields = {"Name", "Id", "Level"}
+    # 执行操作
+    if action == "add": # 添加
+        # 验证必要字段
+        required_fields = {"Id", "Level"}
         missing_fields = required_fields - set(operation.keys())
         if missing_fields:
             raise InvalidOperationError(f"添加操作缺少必需字段: {missing_fields}")
 
-        # Validate all provided fields
+        # 验证字段合法性
         errors = validate_task_fields(operation, task_config, allow_partial=False, is_update=False)
         if errors:
             raise TypeValidationError("; ".join(errors))
 
         # Build new task item
         new_task = {
-            "Name": operation["Name"],
+            "Name": get_task_name_by_task_id(operation["Id"],sra_config=sra_config),
             "Id": operation["Id"],
             "Level": operation["Level"],
-            "LevelName": operation.get("LevelName", "") or _get_level_name_from_frontend(operation["Id"], operation["Level"]),
+            "LevelName": _get_level_name_from_frontend(operation["Id"], operation["Level"]),
             "Count": operation.get("Count", 1),
             "RunTimes": operation.get("RunTimes", 1),
             "AutoDetect": operation.get("AutoDetect", True),
@@ -512,41 +532,45 @@ def update_trailblaze_power_task_list(
         task_name = new_task["Name"]
         message = f"已添加关卡：{task_name}"
 
-    elif action == "update":
+    elif action == "update": # 更新
+        # 索引合法性
         index = operation.get("index")
         if index is None:
             raise InvalidOperationError("更新操作需要指定 index")
-
         if not isinstance(index, int) or index < 0 or index >= len(task_list):
             raise IndexOutOfRangeError(f"索引 {index} 超出范围，当前列表长度为 {len(task_list)}")
-
-        # Filter to only update fields that are provided
+        # 检查是否有更新
         update_fields = {k: v for k, v in operation.items() if k in VALID_FIELDS and k != "index"}
         if not update_fields:
             raise InvalidOperationError("更新操作至少需要提供一个要更新的字段")
+        # 补全operation
+        if not "LevelName" in operation:
+            operation["LevelName"] = _get_level_name_from_frontend(operation["Id"], operation["Level"])
+            update_fields["LevelName"] = operation["LevelName"]
+        if not "Name" in operation:
+            operation["Name"] = get_task_name_by_task_id(operation["Id"],sra_config=sra_config)
+            update_fields["Name"] = operation["Name"]
 
-        # Validate fields
+        # 检查operation合法性
         errors = validate_task_fields(update_fields, task_config, allow_partial=True, is_update=True)
         if errors:
             raise TypeValidationError("; ".join(errors))
 
-        # Apply partial update
+        # 应用更新
         current_task = task_list[index]
         current_task.update(update_fields)
-        # Sync LevelName if Level was changed
-        if "Level" in update_fields:
-            _sync_level_name(current_task)
+        # # Sync LevelName if Level was changed
+        # if "Level" in update_fields:
+        #     _sync_level_name(current_task)
         task_name = current_task["Name"]
         message = f"已更新关卡：{task_name}"
 
-    elif action == "remove":
+    elif action == "remove": # 移除
         index = operation.get("index")
         if index is None:
             raise InvalidOperationError("删除操作需要指定 index")
-
         if not isinstance(index, int) or index < 0 or index >= len(task_list):
             raise IndexOutOfRangeError(f"索引 {index} 超出范围，当前列表长度为 {len(task_list)}")
-
         removed_task = task_list.pop(index)
         task_name = removed_task.get("Name", removed_task.get("Id", ""))
         message = f"已删除关卡：{task_name}"

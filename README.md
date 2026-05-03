@@ -45,13 +45,6 @@ pip install .
 
 ## 可用工具
 
-### 设置工具
-| 工具 | 描述 |
-|------|------|
-| `sra_get_settings` | 获取原始 settings.json |
-| `sra_get_settings_readable` | 获取可读的设置（中文显示名称） |
-| `sra_update_settings` | 使用显示名称更新设置（中文） |
-
 ### 任务配置工具
 | 工具 | 描述 |
 |------|------|
@@ -73,19 +66,6 @@ pip install .
 | `sra_update_trailblaze_power_task_list` | 添加、修改或删除清体力任务（原子操作） |
 
 ## 使用示例
-
-### 设置操作
-
-```python
-# 获取原始设置
-sra_get_settings()
-
-# 获取可读设置（中文字段名）
-sra_get_settings_readable()
-
-# 更新设置
-sra_update_settings({"语言": "English", "StartStopHotkey": "f10"})
-```
 
 ### 任务配置操作
 
@@ -195,14 +175,6 @@ sra_update_trailblaze_power_task_list("Daily", {
 - **仅支持 Windows** - SRA 本身仅支持 Windows
 - **需要 .NET 8.0** - 用于运行 SRA GUI
 - **同步执行** - 任务执行会阻塞，超时时间可配置（默认 30 分钟）
-
-## 数据来源
-
-`TrailblazePowerTaskList` 工具使用 SRA 前端关卡数据：
-- `SRAFrontend/ViewModels/TaskPageViewModel.cs`（Tasks AvaloniaList）
-
-当 StarRailAssistant 更新关卡数据时，需要更新：
-- `src/sra_mcp/tools/trailblaze_power.py` 中的 `FRONTEND_LEVELS`
 
 ## 许可证
 

@@ -33,7 +33,7 @@ def _get_settings_path() -> Path:
     return appdata / "SRA" / "settings.json"
 
 
-def get_settings(config: Optional[SRAConfig] = None) -> dict:
+def get_settings() -> dict:
     """Read raw SRA settings JSON."""
     settings_path = _get_settings_path()
     try:
@@ -45,9 +45,9 @@ def get_settings(config: Optional[SRAConfig] = None) -> dict:
         raise SettingsReadError(f"Invalid JSON in settings file: {e}")
 
 
-def get_settings_readable(config: Optional[SRAConfig] = None) -> dict:
+def get_settings_readable() -> dict:
     """Read SRA settings with human-readable field names and values."""
-    raw = get_settings(config)
+    raw = get_settings()
     mapper = JsonToDisplayMapper()
     readable = mapper.map(raw)
     return {
